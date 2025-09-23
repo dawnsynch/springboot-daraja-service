@@ -1,4 +1,4 @@
-package com.dawnsynch.darajaapitutorial.entity;
+package com.dawnsynch.darajaapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;

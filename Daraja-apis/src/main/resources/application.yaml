@@ -15,15 +15,22 @@ spring:
 
 mpesa:
   daraja:
-    consumer-key: vFOdO2mgqmLIKRc0QXmODMyQPYoTwMt4AYOVfpJG9Xu8Sd14
-    consumer-secret: CiiPpkz4z8housn4TUR1XmZto1oTsrAvKVuG2miC7fnQyXTBjp6j8Up25RaQAR88
+    consumer-key: gH5eoFGx4RsGkUN5gcV1M7AdhilU7vMBv4kWMoXIGc0TsOhx
+    consumer-secret: FvqoTlyKarH5SLBQGeEpKGcGRoePaf7G6NVU9veero3XKGF4mTRL9fw4VLGg6IK9
     passkey: bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919
     business-shortcode: 174379
-    stk-push-callback-url: https://f63e16c9e62e.ngrok-free.app/api/payments/callback
+    stk-push-callback-url: https://37f73caa2c4b.ngrok-free.app/api/payments/callback
     stk-push-url: https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest
     responseType: Completed
-    shortCode: 600998
-    confirmation-url: https://f63e16c9e62e.ngrok-free.app/api/payments/confirmation
-    validation-url: https://f63e16c9e62e.ngrok-free.app/api/payments/validation
+    shortCode: 600997
+    confirmation-url: https://37f73caa2c4b.ngrok-free.app/api/payments/confirmation
+    validation-url: https://37f73caa2c4b.ngrok-free.app/api/payments/validation
     register-url-endpoint: https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl
     simulate-transaction-endpoint: https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate
+    b2c-initiator-password: Safaricom123!!
+    b2c-result-url: https://37f73caa2c4b.ngrok-free.app/api/payments/b2c-transaction-result
+    b2c-queue-timeout-url: https://37f73caa2c4b.ngrok-free.app/api/payments/b2c-queue-timeout
+    b2c-initiator-name: testapi
+    b2c-transaction-endpoint: https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
+    transactionResultUrl: https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query
+    security-credential: U95aaS2lDN2BvL2X7z17xWCTGty8yHgmMdU2NsQQ8mxZqE7CHJOr1NsX1xTD0PG+Hcm/Hl/jI4bF1+ro+wVh5EyimMOff6rMKL6ZSf7Ohg+lajkuJKzCXwIIrW//+ub+jWYY7N5/2Gv/OZLFYL1t3kTJCWh8o5mwHY7XuOqC5yGa2HE2syKtBI5l4QGIcs/nlgkRgsWSlgS/M4sk4U3XkLJqNZG95jShGUusO7N3BdAWXDuq0JQSzB+m8bf40D7U6HJNZvWmTKjH330b7481LNXqxGrzMqY7CwXZZTyvzab/mZZJZ+nNuRokUId9e3XrikgIUOsjgMIGqjveW61kUw==

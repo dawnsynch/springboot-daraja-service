@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.dawnsynch</groupId>
-    <artifactId>Daraja-api-tutorial</artifactId>
+    <artifactId>Daraja-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Daraja-api-tutorial</name>
     <description>Daraja-api-tutorial</description>

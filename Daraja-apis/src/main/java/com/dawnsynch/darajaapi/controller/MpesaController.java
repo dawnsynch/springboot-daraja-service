@@ -1,9 +1,9 @@
-package com.dawnsynch.darajaapitutorial.controller;
+package com.dawnsynch.darajaapi.controller;
 
-import com.dawnsynch.darajaapitutorial.dtos.*;
-import com.dawnsynch.darajaapitutorial.entity.STKCallbackLog;
-import com.dawnsynch.darajaapitutorial.repository.STKPushLogRepository;
-import com.dawnsynch.darajaapitutorial.service.MpesaService;
+import com.dawnsynch.darajaapi.dtos.*;
+import com.dawnsynch.darajaapi.entity.STKCallbackLog;
+import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
+import com.dawnsynch.darajaapi.service.MpesaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -113,5 +113,30 @@ public class MpesaController {
         }
     }
 
+//    SIMULATE B2C TRANSACTION
+    @PostMapping("/b2c-transaction")
+    public ResponseEntity<CommonSyncResponse> performB2CTransaction(@RequestBody InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
+        return ResponseEntity.ok(mpesaService.performB2CTransaction(internalB2CTransactionRequest));
 
+    }
+
+    @PostMapping("/b2c-transaction-result")
+    public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@RequestBody TransactionStatusAsyncResponse transactionStatusAsyncResponse){
+        return ResponseEntity.ok(acknowledgeResponse);
+    }
+
+    @PostMapping(path = "/b2c-queue-timeout", produces = "application/json")
+    public ResponseEntity<AcknowledgeResponse> queueTimeout(@RequestBody Object object) {
+        return ResponseEntity.ok(acknowledgeResponse);
+    }
+
+
+    @PostMapping(path = "/simulate-transaction-result", produces = "application/json")
+    public ResponseEntity<TransactionStatusSyncResponse> getTransactionStatusResult(@RequestBody InternalTransactionStatusRequest internalTransactionStatusRequest) {
+        try {
+            return ResponseEntity.ok(mpesaService.getTransactionResult(internalTransactionStatusRequest));
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

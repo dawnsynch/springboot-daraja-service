@@ -1,16 +1,19 @@
-package com.dawnsynch.darajaapitutorial.service;
+package com.dawnsynch.darajaapi.service;
 
-import com.dawnsynch.darajaapitutorial.dtos.*;
-import com.dawnsynch.darajaapitutorial.entity.STKCallbackLog;
-import com.dawnsynch.darajaapitutorial.repository.STKPushLogRepository;
-import com.dawnsynch.darajaapitutorial.utils.Helper;
+import com.dawnsynch.darajaapi.dtos.*;
+import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
+import com.dawnsynch.darajaapi.utils.Helper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+
+import static com.dawnsynch.darajaapi.utils.Constants.*;
+import static com.dawnsynch.darajaapi.utils.Helper.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +41,7 @@ public class MpesaService {
     @Value("${mpesa.daraja.passkey}")
     private String passkey;
 
-//    shortcode used for registering url
+    //    shortcode used for registering url
     @Value("${mpesa.daraja.shortCode}")
     private String shortCode;
 
@@ -56,6 +59,28 @@ public class MpesaService {
 
     @Value("${mpesa.daraja.simulate-transaction-endpoint}")
     private String simulateTransactionEndpoint;
+
+    @Value("${mpesa.daraja.b2c-initiator-password}")
+    private String b2cInitiatorPassword;
+
+    @Value("${mpesa.daraja.b2c-result-url}")
+    private String b2cResultUrl;
+
+    @Value("${mpesa.daraja.b2c-queue-timeout-url}")
+    private String b2cQueueTimeoutUrl;
+
+    @Value("${mpesa.daraja.b2c-initiator-name}")
+    private String b2cInitiatorName;
+
+    @Value("${mpesa.daraja.b2c-transaction-endpoint}")
+    private String b2cTransactionEndpoint;
+
+    @Value("${mpesa.daraja.transactionResultUrl}")
+    private String transactionResultUrl;
+
+    @Value("${mpesa.daraja.security-credential}")
+    private String securityCredential;
+
 
 
     //    THIS METHOD GENERATES ACCESS TOKEN TO BE USED FOR AUTHORIZATION BY OTHER DARAJA APIS
@@ -157,7 +182,7 @@ public class MpesaService {
         }
     }
 
-//    SIMULATE C2B Transaction
+//    SIMULATE C2B TRANSACTION
     public SimulateC2BResponse simulateC2BTransaction(SimulateC2BRequest simulateC2BRequest) throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
@@ -177,6 +202,86 @@ public class MpesaService {
             }
 
             return objectMapper.readValue(response.body().string(), SimulateC2BResponse.class);
+        }
+    }
+
+
+//      SIMULATE B2C TRANSACTION
+
+    public CommonSyncResponse performB2CTransaction (@NotNull InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
+
+        AccessTokenResponse accessTokenResponse = generateAccessToken();
+
+        B2CTransactionRequest b2cTransactionRequest = new B2CTransactionRequest();
+        b2cTransactionRequest.setCommandID(internalB2CTransactionRequest.getCommandID());
+        b2cTransactionRequest.setAmount(internalB2CTransactionRequest.getAmount());
+        b2cTransactionRequest.setPartyB(internalB2CTransactionRequest.getPartyB());
+        b2cTransactionRequest.setRemarks(internalB2CTransactionRequest.getRemarks());
+        b2cTransactionRequest.setOccassion(internalB2CTransactionRequest.getOccassion());
+
+//        Get security credentials
+        b2cTransactionRequest.setSecurityCredential(securityCredential);
+//        b2cTransactionRequest.setSecurityCredential( Helper.generateSecurityCredential(b2cInitiatorPassword,"SandboxCertificate.cer"));
+//        Set the result url
+        b2cTransactionRequest.setResultURL(b2cResultUrl);
+        b2cTransactionRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
+        b2cTransactionRequest.setInitiatorName(b2cInitiatorName);
+        b2cTransactionRequest.setPartyA(shortCode);
+
+
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(b2cTransactionRequest));
+
+        Request request = new Request.Builder()
+                .url(b2cTransactionEndpoint)
+                .post(body)
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "No response body";
+                throw new IOException("Could not perform B2C transaction " + response.code() + ": " + errorBody);
+            }
+
+            return objectMapper.readValue(response.body().string(), CommonSyncResponse.class);
+        }
+
+    }
+
+//    QUERY TRANSACTION
+
+    public TransactionStatusSyncResponse getTransactionResult(InternalTransactionStatusRequest internalTransactionStatusRequest) throws IOException {
+        AccessTokenResponse accessTokenResponse = generateAccessToken();
+
+        TransactionStatusRequest transactionStatusRequest = new TransactionStatusRequest();
+        transactionStatusRequest.setTransactionID(internalTransactionStatusRequest.getTransactionID());
+        transactionStatusRequest.setInitiator(b2cInitiatorName);
+        transactionStatusRequest.setSecurityCredential(securityCredential);
+        transactionStatusRequest.setCommandID(TRANSACTION_STATUS_QUERY_COMMAND);
+        transactionStatusRequest.setPartyA(shortCode);
+        transactionStatusRequest.setIdentifierType(SHORT_CODE_IDENTIFIER);
+        transactionStatusRequest.setResultURL(b2cResultUrl);
+        transactionStatusRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
+        transactionStatusRequest.setRemarks(TRANSACTION_STATUS_VALUE);
+        transactionStatusRequest.setOccasion(TRANSACTION_STATUS_VALUE);
+
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(transactionStatusRequest));
+
+        Request request = new Request.Builder()
+                .url(transactionResultUrl)
+                .post(body)
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "No response body";
+                throw new IOException("Could not fetch transaction result " + response.code() + ": " + errorBody);
+            }
+
+            return objectMapper.readValue(response.body().string(), TransactionStatusSyncResponse.class);
         }
     }
 

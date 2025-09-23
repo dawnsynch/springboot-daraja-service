@@ -1,4 +1,4 @@
-package com.dawnsynch.darajaapitutorial.dtos;
+package com.dawnsynch.darajaapi.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

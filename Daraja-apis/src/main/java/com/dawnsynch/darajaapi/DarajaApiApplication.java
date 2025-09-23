@@ -1,16 +1,15 @@
-package com.dawnsynch.darajaapitutorial;
+package com.dawnsynch.darajaapi;
 
-import com.dawnsynch.darajaapitutorial.dtos.AcknowledgeResponse;
-import com.dawnsynch.darajaapitutorial.dtos.TransactionResult;
+import com.dawnsynch.darajaapi.dtos.AcknowledgeResponse;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class DarajaApiTutorialApplication {
+public class DarajaApiApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DarajaApiTutorialApplication.class, args);
+        SpringApplication.run(DarajaApiApplication.class, args);
     }
 
     @Bean
