@@ -139,4 +139,9 @@ public class MpesaController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/check-account-balance")
+    public ResponseEntity<CommonSyncResponse> checkAccountBalance() throws IOException {
+        return ResponseEntity.ok(mpesaService.checkAccountBalance());
+    }
 }

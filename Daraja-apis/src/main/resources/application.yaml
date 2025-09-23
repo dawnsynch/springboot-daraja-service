@@ -33,4 +33,5 @@ mpesa:
     b2c-initiator-name: testapi
     b2c-transaction-endpoint: https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
     transactionResultUrl: https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query
+    checkAccountBalanceUrl: https://sandbox.safaricom.co.ke/mpesa/accountbalance/v1/query
     security-credential: U95aaS2lDN2BvL2X7z17xWCTGty8yHgmMdU2NsQQ8mxZqE7CHJOr1NsX1xTD0PG+Hcm/Hl/jI4bF1+ro+wVh5EyimMOff6rMKL6ZSf7Ohg+lajkuJKzCXwIIrW//+ub+jWYY7N5/2Gv/OZLFYL1t3kTJCWh8o5mwHY7XuOqC5yGa2HE2syKtBI5l4QGIcs/nlgkRgsWSlgS/M4sk4U3XkLJqNZG95jShGUusO7N3BdAWXDuq0JQSzB+m8bf40D7U6HJNZvWmTKjH330b7481LNXqxGrzMqY7CwXZZTyvzab/mZZJZ+nNuRokUId9e3XrikgIUOsjgMIGqjveW61kUw==

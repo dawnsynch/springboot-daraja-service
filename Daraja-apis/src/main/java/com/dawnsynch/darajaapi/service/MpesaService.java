@@ -81,6 +81,9 @@ public class MpesaService {
     @Value("${mpesa.daraja.security-credential}")
     private String securityCredential;
 
+    @Value("${mpesa.daraja.checkAccountBalanceUrl}")
+    private String accountBalanceUrl;
+
 
 
     //    THIS METHOD GENERATES ACCESS TOKEN TO BE USED FOR AUTHORIZATION BY OTHER DARAJA APIS
@@ -285,5 +288,39 @@ public class MpesaService {
         }
     }
 
+
+//    CHECK ACCOUNT BALANCE
+
+    public CommonSyncResponse checkAccountBalance() throws IOException {
+        AccessTokenResponse accessTokenResponse = generateAccessToken();
+
+        CheckAccountBalanceRequest checkAccountBalanceRequest = new CheckAccountBalanceRequest();
+        checkAccountBalanceRequest.setInitiator(b2cInitiatorName);
+        checkAccountBalanceRequest.setSecurityCredential(securityCredential);
+        checkAccountBalanceRequest.setCommandID(ACCOUNT_BALANCE_COMMAND);
+        checkAccountBalanceRequest.setPartyA(shortCode);
+        checkAccountBalanceRequest.setIdentifierType(SHORT_CODE_IDENTIFIER);
+        checkAccountBalanceRequest.setRemarks("Check account balance");
+        checkAccountBalanceRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
+        checkAccountBalanceRequest.setResultURL(b2cResultUrl);
+
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(checkAccountBalanceRequest));
+
+        Request request = new Request.Builder()
+                .url(accountBalanceUrl)
+                .post(body)
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "No response body";
+                throw new IOException("Could not fetch the account balance " + response.code() + ": " + errorBody);
+            }
+
+            return objectMapper.readValue(response.body().string(), CommonSyncResponse.class);
+        }
+    }
 }
 
