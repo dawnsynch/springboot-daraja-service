@@ -1,6 +1,8 @@
 package com.dawnsynch.darajaapi.service;
 
 import com.dawnsynch.darajaapi.dtos.*;
+import com.dawnsynch.darajaapi.entity.B2C_C2B_Callback;
+import com.dawnsynch.darajaapi.repository.B2C_C2B_CallbackRepository;
 import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
 import com.dawnsynch.darajaapi.utils.Helper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.dawnsynch.darajaapi.utils.Constants.*;
 import static com.dawnsynch.darajaapi.utils.Helper.*;
@@ -22,6 +29,7 @@ public class MpesaService {
     private final OkHttpClient okHttpClient;
     private final ObjectMapper objectMapper;
     private final STKPushLogRepository stkPushLogRepository;
+    private final B2C_C2B_CallbackRepository b2cC2BCallbackRepository;
 
     @Value("${mpesa.daraja.consumer-key}")
     private String consumerKey;
@@ -322,5 +330,71 @@ public class MpesaService {
             return objectMapper.readValue(response.body().string(), CommonSyncResponse.class);
         }
     }
+
+
+//    SAVING C2B AND B2C TRANSACTION RESULTS TO DATABASE
+
+    public void saveCallback(TransactionStatusAsyncResponse response) {
+        TransactionStatusAsyncResponse.Result result = response.getResult();
+
+        B2C_C2B_Callback entity = new B2C_C2B_Callback();
+        entity.setResultType(result.getResultType());
+        entity.setResultCode(result.getResultCode());
+        entity.setResultDesc(result.getResultDesc());
+        entity.setOriginatorConversationId(result.getOriginatorConversationID());
+        entity.setConversationId(result.getConversationID());
+        entity.setTransactionId(result.getTransactionID());
+
+        // ReferenceData
+        if (result.getReferenceData() != null) {
+            entity.setReferenceItemKey(result.getReferenceData().getReferenceItem().getKey());
+            entity.setReferenceItemValue(result.getReferenceData().getReferenceItem().getValue());
+        }
+
+        // ResultParameters (only present if success)
+        Map<String, String> params = (result.getResultParameters() != null
+                && result.getResultParameters().getResultParameter() != null)
+                ? result.getResultParameters().getResultParameter().stream()
+                .collect(Collectors.toMap(
+                        TransactionStatusAsyncResponse.ResultParameter::getKey,
+                        TransactionStatusAsyncResponse.ResultParameter::getValue
+                ))
+                : Collections.emptyMap();
+
+        if (!params.isEmpty()) {
+            entity.setTransactionAmount(params.containsKey("TransactionAmount")
+                    ? Double.valueOf(params.get("TransactionAmount")) : null);
+
+            entity.setTransactionReceipt(params.get("TransactionReceipt"));
+            entity.setReceiverPartyPublicName(params.get("ReceiverPartyPublicName"));
+
+            if (params.containsKey("TransactionCompletedDateTime")) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+                    entity.setTransactionCompletedDatetime(
+                            LocalDateTime.parse(params.get("TransactionCompletedDateTime"), formatter)
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            entity.setB2cUtilityAccountFunds(params.containsKey("B2CUtilityAccountAvailableFunds")
+                    ? Double.valueOf(params.get("B2CUtilityAccountAvailableFunds")) : null);
+
+            entity.setB2cWorkingAccountFunds(params.containsKey("B2CWorkingAccountAvailableFunds")
+                    ? Double.valueOf(params.get("B2CWorkingAccountAvailableFunds")) : null);
+
+            entity.setB2cRecipientRegisteredCustomer(params.get("B2CRecipientIsRegisteredCustomer"));
+
+            entity.setB2cChargesPaidAccountFunds(params.containsKey("B2CChargesPaidAccountAvailableFunds")
+                    ? Double.valueOf(params.get("B2CChargesPaidAccountAvailableFunds")) : null);
+        }
+
+        b2cC2BCallbackRepository.save(entity);
+    }
 }
+
+
+
 

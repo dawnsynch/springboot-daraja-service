@@ -122,6 +122,7 @@ public class MpesaController {
 
     @PostMapping("/b2c-transaction-result")
     public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@RequestBody TransactionStatusAsyncResponse transactionStatusAsyncResponse){
+        mpesaService.saveCallback(transactionStatusAsyncResponse);
         return ResponseEntity.ok(acknowledgeResponse);
     }
 

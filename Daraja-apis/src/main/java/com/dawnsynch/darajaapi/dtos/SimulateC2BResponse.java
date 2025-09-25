@@ -8,8 +8,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SimulateC2BResponse {
 
-    @JsonProperty("ConversationID")
-    private String conversationID;
+    @JsonProperty("ResponseCode")
+    private String responseCode;
     @JsonProperty("ResponseDescription")
     private String responseDescription;
     @JsonProperty("OriginatorCoversationID")

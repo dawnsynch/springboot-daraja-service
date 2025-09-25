@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class CheckAccountBalanceAsyncResponse {
 
-    @JsonProperty("Result")
-    private Result result;
+//    @JsonProperty("Result")
+//    private Result result;
 }
