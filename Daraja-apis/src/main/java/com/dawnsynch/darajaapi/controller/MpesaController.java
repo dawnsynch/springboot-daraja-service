@@ -1,7 +1,7 @@
 package com.dawnsynch.darajaapi.controller;
 
 import com.dawnsynch.darajaapi.dtos.*;
-import com.dawnsynch.darajaapi.entity.STKCallbackLog;
+import com.dawnsynch.darajaapi.records.*;
 import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
 import com.dawnsynch.darajaapi.service.MpesaService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class MpesaController {
 
 //    INITIATE STK PUSH
     @PostMapping("/stk-push")
-    public ResponseEntity<STKPushResponse> stkPush(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<STKSyncResponse> stkPush(@RequestBody Map<String, String> payload) {
         try {
             return ResponseEntity.ok(mpesaService.initiateSTKPush(payload.get("phoneNumber"), payload.get("amount")));
         } catch (Exception e) {
@@ -45,43 +45,15 @@ public class MpesaController {
     }
 
 //    STK CALLBACK
-    @PostMapping("/callback")
-    public Map<String, String> handleCallback(@RequestBody STKCallbackDTO callbackDTO) {
-        STKCallbackDTO.StkCallback stk = callbackDTO.getBody().getStkCallback();
+@PostMapping("/callback")
+public Map<String, String> handleCallback(@RequestBody STKCallback callback) {
+    mpesaService.processStkCallback(callback);
 
-        Double amount = null;
-        String receipt = null;
-        String txnDate = null;
-        String phone = null;
-
-        if (stk.getResultCode() == 0 && stk.getCallbackMetadata() != null) {
-            // Successful transaction → parse metadata
-            for (STKCallbackDTO.Item item : stk.getCallbackMetadata().getItem()) {
-                switch (item.getName()) {
-                    case "Amount" -> amount = Double.valueOf(item.getValue().toString());
-                    case "MpesaReceiptNumber" -> receipt = item.getValue().toString();
-                    case "TransactionDate" -> txnDate = item.getValue().toString();
-                    case "PhoneNumber" -> phone = item.getValue().toString();
-                }
-            }
-        }
-
-        STKCallbackLog log = STKCallbackLog.builder()
-                .merchantRequestId(stk.getMerchantRequestID())
-                .checkoutRequestId(stk.getCheckoutRequestID())
-                .resultCode(stk.getResultCode())
-                .resultDesc(stk.getResultDesc())
-                .amount(amount)   // will be null for failed txns
-                .mpesaReceiptNumber(receipt)
-                .transactionDate(txnDate)
-                .phoneNumber(phone)
-                .build();
-
-        stkPushLogRepository.save(log);
-
-        return Map.of("ResultCode", "0", "ResultDesc", "Callback received successfully");
-    }
-
+    return Map.of(
+            "ResultCode", "0",
+            "ResultDesc", "Callback received successfully"
+    );
+}
 
 
 //      REGISTER URL FOR C2B
@@ -121,8 +93,8 @@ public class MpesaController {
     }
 
     @PostMapping("/b2c-transaction-result")
-    public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@RequestBody TransactionStatusAsyncResponse transactionStatusAsyncResponse){
-        mpesaService.saveCallback(transactionStatusAsyncResponse);
+    public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@RequestBody TransactionAsyncResponse transactionAsyncResponse){
+        mpesaService.saveCallback(transactionAsyncResponse);
         return ResponseEntity.ok(acknowledgeResponse);
     }
 
@@ -133,7 +105,7 @@ public class MpesaController {
 
 
     @PostMapping(path = "/simulate-transaction-result", produces = "application/json")
-    public ResponseEntity<TransactionStatusSyncResponse> getTransactionStatusResult(@RequestBody InternalTransactionStatusRequest internalTransactionStatusRequest) {
+    public ResponseEntity<CommonSyncResponse> getTransactionStatusResult(@RequestBody InternalTransactionStatusRequest internalTransactionStatusRequest) {
         try {
             return ResponseEntity.ok(mpesaService.getTransactionResult(internalTransactionStatusRequest));
         } catch (Exception e) {

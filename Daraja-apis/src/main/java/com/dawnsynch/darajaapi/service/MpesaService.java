@@ -2,6 +2,8 @@ package com.dawnsynch.darajaapi.service;
 
 import com.dawnsynch.darajaapi.dtos.*;
 import com.dawnsynch.darajaapi.entity.B2C_C2B_Callback;
+import com.dawnsynch.darajaapi.entity.STKCallbackLog;
+import com.dawnsynch.darajaapi.records.*;
 import com.dawnsynch.darajaapi.repository.B2C_C2B_CallbackRepository;
 import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
 import com.dawnsynch.darajaapi.utils.Helper;
@@ -20,7 +22,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.dawnsynch.darajaapi.utils.Constants.*;
-import static com.dawnsynch.darajaapi.utils.Helper.*;
 
 @Service
 @RequiredArgsConstructor
@@ -117,7 +118,7 @@ public class MpesaService {
 
 //    INITIATES THE STK PUSH
 
-    public STKPushResponse initiateSTKPush(String phoneNumber, String amount) throws IOException {
+    public STKSyncResponse initiateSTKPush(String phoneNumber, String amount) throws IOException {
         phoneNumber = phoneNumber.startsWith("0") ? phoneNumber.replaceFirst("0", "254") : phoneNumber;
 
 //         get access token here
@@ -148,7 +149,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(stkPushurl)
                 .post(requestBody)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -157,7 +158,7 @@ public class MpesaService {
             if (!response.isSuccessful()) {
                 throw new IOException("Failed to initiate STK push");
             }
-            return objectMapper.readValue(response.body().string(), STKPushResponse.class);
+            return objectMapper.readValue(response.body().string(), STKSyncResponse.class);
         }
     }
 
@@ -179,7 +180,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(registerUrlEndpoint)
                 .post(requestBody)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -202,7 +203,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(simulateTransactionEndpoint)
                 .post(body)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -232,7 +233,6 @@ public class MpesaService {
 
 //        Get security credentials
         b2cTransactionRequest.setSecurityCredential(securityCredential);
-//        b2cTransactionRequest.setSecurityCredential( Helper.generateSecurityCredential(b2cInitiatorPassword,"SandboxCertificate.cer"));
 //        Set the result url
         b2cTransactionRequest.setResultURL(b2cResultUrl);
         b2cTransactionRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
@@ -245,7 +245,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(b2cTransactionEndpoint)
                 .post(body)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -262,7 +262,7 @@ public class MpesaService {
 
 //    QUERY TRANSACTION
 
-    public TransactionStatusSyncResponse getTransactionResult(InternalTransactionStatusRequest internalTransactionStatusRequest) throws IOException {
+    public CommonSyncResponse getTransactionResult(InternalTransactionStatusRequest internalTransactionStatusRequest) throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
         TransactionStatusRequest transactionStatusRequest = new TransactionStatusRequest();
@@ -282,7 +282,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(transactionResultUrl)
                 .post(body)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -292,7 +292,7 @@ public class MpesaService {
                 throw new IOException("Could not fetch transaction result " + response.code() + ": " + errorBody);
             }
 
-            return objectMapper.readValue(response.body().string(), TransactionStatusSyncResponse.class);
+            return objectMapper.readValue(response.body().string(), CommonSyncResponse.class);
         }
     }
 
@@ -317,7 +317,7 @@ public class MpesaService {
         Request request = new Request.Builder()
                 .url(accountBalanceUrl)
                 .post(body)
-                .addHeader("Authorization", "Bearer " + accessTokenResponse.getAccess_token())
+                .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
                 .build();
 
@@ -334,30 +334,30 @@ public class MpesaService {
 
 //    SAVING C2B AND B2C TRANSACTION RESULTS TO DATABASE
 
-    public void saveCallback(TransactionStatusAsyncResponse response) {
-        TransactionStatusAsyncResponse.Result result = response.getResult();
+    public void saveCallback(TransactionAsyncResponse response) {
+        TransactionAsyncResponse.Result result = response.result();
 
         B2C_C2B_Callback entity = new B2C_C2B_Callback();
-        entity.setResultType(result.getResultType());
-        entity.setResultCode(result.getResultCode());
-        entity.setResultDesc(result.getResultDesc());
-        entity.setOriginatorConversationId(result.getOriginatorConversationID());
-        entity.setConversationId(result.getConversationID());
-        entity.setTransactionId(result.getTransactionID());
+        entity.setResultType(result.resultType());
+        entity.setResultCode(result.resultCode());
+        entity.setResultDesc(result.resultDesc());
+        entity.setOriginatorConversationId(result.originatorConversationID());
+        entity.setConversationId(result.conversationID());
+        entity.setTransactionId(result.transactionID());
 
         // ReferenceData
-        if (result.getReferenceData() != null) {
-            entity.setReferenceItemKey(result.getReferenceData().getReferenceItem().getKey());
-            entity.setReferenceItemValue(result.getReferenceData().getReferenceItem().getValue());
+        if (result.referenceData() != null) {
+            entity.setReferenceItemKey(result.referenceData().referenceItem().key());
+            entity.setReferenceItemValue(result.referenceData().referenceItem().value());
         }
 
         // ResultParameters (only present if success)
-        Map<String, String> params = (result.getResultParameters() != null
-                && result.getResultParameters().getResultParameter() != null)
-                ? result.getResultParameters().getResultParameter().stream()
+        Map<String, String> params = (result.resultParameters() != null
+                && result.resultParameters().resultParameter() != null)
+                ? result.resultParameters().resultParameter().stream()
                 .collect(Collectors.toMap(
-                        TransactionStatusAsyncResponse.ResultParameter::getKey,
-                        TransactionStatusAsyncResponse.ResultParameter::getValue
+                        TransactionAsyncResponse.ResultParameter::key,
+                        TransactionAsyncResponse.ResultParameter::value
                 ))
                 : Collections.emptyMap();
 
@@ -392,6 +392,39 @@ public class MpesaService {
         }
 
         b2cC2BCallbackRepository.save(entity);
+    }
+
+    public void processStkCallback(STKCallback callback) {
+        STKCallback.StkCallback stk = callback.body().stkCallback();
+
+        Double amount = null;
+        String receipt = null;
+        String txnDate = null;
+        String phone = null;
+
+        if (stk.resultCode() == 0 && stk.callbackMetadata() != null) {
+            for (STKCallback.Item item : stk.callbackMetadata().item()) {
+                switch (item.name()) {
+                    case "Amount" -> amount = Double.valueOf(item.value().toString());
+                    case "MpesaReceiptNumber" -> receipt = item.value().toString();
+                    case "TransactionDate" -> txnDate = item.value().toString();
+                    case "PhoneNumber" -> phone = item.value().toString();
+                }
+            }
+        }
+
+        STKCallbackLog log = STKCallbackLog.builder()
+                .merchantRequestId(stk.merchantRequestID())
+                .checkoutRequestId(stk.checkoutRequestID())
+                .resultCode(stk.resultCode())
+                .resultDesc(stk.resultDesc())
+                .amount(amount)   // null if failed
+                .mpesaReceiptNumber(receipt)
+                .transactionDate(txnDate)
+                .phoneNumber(phone)
+                .build();
+
+        stkPushLogRepository.save(log);
     }
 }
 
