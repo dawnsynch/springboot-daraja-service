@@ -1,5 +1,6 @@
 package com.dawnsynch.darajaapi.service;
 
+import com.dawnsynch.darajaapi.configurations.DarajaProperties;
 import com.dawnsynch.darajaapi.dtos.*;
 import com.dawnsynch.darajaapi.entity.B2C_C2B_Callback;
 import com.dawnsynch.darajaapi.entity.STKCallbackLog;
@@ -11,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,73 +31,12 @@ public class MpesaService {
     private final ObjectMapper objectMapper;
     private final STKPushLogRepository stkPushLogRepository;
     private final B2C_C2B_CallbackRepository b2cC2BCallbackRepository;
-
-    @Value("${mpesa.daraja.consumer-key}")
-    private String consumerKey;
-
-    @Value("${mpesa.daraja.consumer-secret}")
-    private String consumerSecret;
-
-    @Value("${mpesa.daraja.stk-push-url}")
-    private String stkPushurl;
-
-    @Value("${mpesa.daraja.stk-push-callback-url}")
-    private String stkPushCallbackUrl;
-
-    @Value("${mpesa.daraja.business-shortcode}")
-    private String businessShortCode;
-
-    @Value("${mpesa.daraja.passkey}")
-    private String passkey;
-
-    //    shortcode used for registering url
-    @Value("${mpesa.daraja.shortCode}")
-    private String shortCode;
-
-    @Value("${mpesa.daraja.responseType}")
-    private String responseType;
-
-    @Value("${mpesa.daraja.confirmation-url}")
-    private String confirmationUrl;
-
-    @Value("${mpesa.daraja.validation-url}")
-    private String validationUrl;
-
-    @Value("${mpesa.daraja.register-url-endpoint}")
-    private String registerUrlEndpoint;
-
-    @Value("${mpesa.daraja.simulate-transaction-endpoint}")
-    private String simulateTransactionEndpoint;
-
-    @Value("${mpesa.daraja.b2c-initiator-password}")
-    private String b2cInitiatorPassword;
-
-    @Value("${mpesa.daraja.b2c-result-url}")
-    private String b2cResultUrl;
-
-    @Value("${mpesa.daraja.b2c-queue-timeout-url}")
-    private String b2cQueueTimeoutUrl;
-
-    @Value("${mpesa.daraja.b2c-initiator-name}")
-    private String b2cInitiatorName;
-
-    @Value("${mpesa.daraja.b2c-transaction-endpoint}")
-    private String b2cTransactionEndpoint;
-
-    @Value("${mpesa.daraja.transactionResultUrl}")
-    private String transactionResultUrl;
-
-    @Value("${mpesa.daraja.security-credential}")
-    private String securityCredential;
-
-    @Value("${mpesa.daraja.checkAccountBalanceUrl}")
-    private String accountBalanceUrl;
-
+    private final DarajaProperties properties;
 
 
     //    THIS METHOD GENERATES ACCESS TOKEN TO BE USED FOR AUTHORIZATION BY OTHER DARAJA APIS
     public AccessTokenResponse generateAccessToken() throws IOException {
-        String credentials = Credentials.basic(consumerKey, consumerSecret);
+        String credentials = Credentials.basic(properties.consumerKey(), properties.consumerSecret());
 
         Request request = new Request.Builder()
                 .url("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials")
@@ -125,19 +64,19 @@ public class MpesaService {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
         String timestamp = Helper.getTimestamp();
-        String password = Helper.toBase64(businessShortCode + passkey + timestamp);
+        String password = Helper.toBase64(properties.businessShortcode() + properties.passkey() + timestamp);
 
 //        map values to stk push request inorder to send a json request
         STKPushRequest stkPushRequest = new STKPushRequest();
-        stkPushRequest.setBusinessShortCode(businessShortCode);
+        stkPushRequest.setBusinessShortCode(properties.businessShortcode());
         stkPushRequest.setPassword(password);
         stkPushRequest.setTimestamp(timestamp);
         stkPushRequest.setTransactionType("CustomerPayBillOnline");
         stkPushRequest.setAmount(amount);
         stkPushRequest.setPartyA(phoneNumber);
-        stkPushRequest.setPartyB(businessShortCode);
+        stkPushRequest.setPartyB(properties.businessShortcode());
         stkPushRequest.setPhoneNumber(phoneNumber);
-        stkPushRequest.setCallBackURL(stkPushCallbackUrl);
+        stkPushRequest.setCallBackURL(properties.stkPushCallbackUrl());
         stkPushRequest.setAccountReference("DawnSynch Tech");
         stkPushRequest.setTransactionDesc(String.format("%s Transaction", phoneNumber));
 
@@ -147,7 +86,7 @@ public class MpesaService {
         RequestBody requestBody = RequestBody.create(jsonRequest, MediaType.parse("application/json"));
 //    sending request to daraja
         Request request = new Request.Builder()
-                .url(stkPushurl)
+                .url(properties.stkPushUrl())
                 .post(requestBody)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
@@ -169,16 +108,16 @@ public class MpesaService {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
         RegisterUrlRequest  registerUrlRequest = new RegisterUrlRequest();
-        registerUrlRequest.setConfirmationURL(confirmationUrl);
-        registerUrlRequest.setResponseType(responseType);
-        registerUrlRequest.setValidationURL(validationUrl);
-        registerUrlRequest.setShortCode(shortCode);
+        registerUrlRequest.setConfirmationURL(properties.confirmationUrl());
+        registerUrlRequest.setResponseType(properties.responseType());
+        registerUrlRequest.setValidationURL(properties.validationUrl());
+        registerUrlRequest.setShortCode(properties.shortCode());
 
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(registerUrlRequest));
 
 
         Request request = new Request.Builder()
-                .url(registerUrlEndpoint)
+                .url(properties.registerUrlEndpoint())
                 .post(requestBody)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
@@ -201,7 +140,7 @@ public class MpesaService {
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(simulateC2BRequest));
 
         Request request = new Request.Builder()
-                .url(simulateTransactionEndpoint)
+                .url(properties.simulateTransactionEndpoint())
                 .post(body)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
@@ -232,18 +171,18 @@ public class MpesaService {
         b2cTransactionRequest.setOccassion(internalB2CTransactionRequest.getOccassion());
 
 //        Get security credentials
-        b2cTransactionRequest.setSecurityCredential(securityCredential);
+        b2cTransactionRequest.setSecurityCredential(properties.securityCredential());
 //        Set the result url
-        b2cTransactionRequest.setResultURL(b2cResultUrl);
-        b2cTransactionRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
-        b2cTransactionRequest.setInitiatorName(b2cInitiatorName);
-        b2cTransactionRequest.setPartyA(shortCode);
+        b2cTransactionRequest.setResultURL(properties.b2cResultUrl());
+        b2cTransactionRequest.setQueueTimeOutURL(properties.b2cQueueTimeoutUrl());
+        b2cTransactionRequest.setInitiatorName(properties.b2cInitiatorName());
+        b2cTransactionRequest.setPartyA(properties.shortCode());
 
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(b2cTransactionRequest));
 
         Request request = new Request.Builder()
-                .url(b2cTransactionEndpoint)
+                .url(properties.b2cTransactionEndpoint())
                 .post(body)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
@@ -267,20 +206,20 @@ public class MpesaService {
 
         TransactionStatusRequest transactionStatusRequest = new TransactionStatusRequest();
         transactionStatusRequest.setTransactionID(internalTransactionStatusRequest.getTransactionID());
-        transactionStatusRequest.setInitiator(b2cInitiatorName);
-        transactionStatusRequest.setSecurityCredential(securityCredential);
+        transactionStatusRequest.setInitiator(properties.b2cInitiatorName());
+        transactionStatusRequest.setSecurityCredential(properties.securityCredential());
         transactionStatusRequest.setCommandID(TRANSACTION_STATUS_QUERY_COMMAND);
-        transactionStatusRequest.setPartyA(shortCode);
+        transactionStatusRequest.setPartyA(properties.shortCode());
         transactionStatusRequest.setIdentifierType(SHORT_CODE_IDENTIFIER);
-        transactionStatusRequest.setResultURL(b2cResultUrl);
-        transactionStatusRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
+        transactionStatusRequest.setResultURL(properties.b2cResultUrl());
+        transactionStatusRequest.setQueueTimeOutURL(properties.b2cQueueTimeoutUrl());
         transactionStatusRequest.setRemarks(TRANSACTION_STATUS_VALUE);
         transactionStatusRequest.setOccasion(TRANSACTION_STATUS_VALUE);
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(transactionStatusRequest));
 
         Request request = new Request.Builder()
-                .url(transactionResultUrl)
+                .url(properties.transactionResultUrl())
                 .post(body)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
@@ -303,19 +242,19 @@ public class MpesaService {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
         CheckAccountBalanceRequest checkAccountBalanceRequest = new CheckAccountBalanceRequest();
-        checkAccountBalanceRequest.setInitiator(b2cInitiatorName);
-        checkAccountBalanceRequest.setSecurityCredential(securityCredential);
+        checkAccountBalanceRequest.setInitiator(properties.b2cInitiatorName());
+        checkAccountBalanceRequest.setSecurityCredential(properties.securityCredential());
         checkAccountBalanceRequest.setCommandID(ACCOUNT_BALANCE_COMMAND);
-        checkAccountBalanceRequest.setPartyA(shortCode);
+        checkAccountBalanceRequest.setPartyA(properties.shortCode());
         checkAccountBalanceRequest.setIdentifierType(SHORT_CODE_IDENTIFIER);
         checkAccountBalanceRequest.setRemarks("Check account balance");
-        checkAccountBalanceRequest.setQueueTimeOutURL(b2cQueueTimeoutUrl);
-        checkAccountBalanceRequest.setResultURL(b2cResultUrl);
+        checkAccountBalanceRequest.setQueueTimeOutURL(properties.b2cQueueTimeoutUrl());
+        checkAccountBalanceRequest.setResultURL(properties.b2cResultUrl());
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(checkAccountBalanceRequest));
 
         Request request = new Request.Builder()
-                .url(accountBalanceUrl)
+                .url(properties.checkAccountBalanceUrl())
                 .post(body)
                 .addHeader("Authorization", "Bearer " + accessTokenResponse.accessToken())
                 .addHeader("Content-Type", "application/json")
