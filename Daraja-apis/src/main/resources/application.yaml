@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/daraja?useSSL=false&serverTimezone=UTC
-    username: root
-    password:
+    url: jdbc:mysql://localhost:3306/daraja?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create   # options: none, validate, update, create, create-drop
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -15,23 +15,23 @@ spring:
 
 mpesa:
   daraja:
-    consumer-key: gH5eoFGx4RsGkUN5gcV1M7AdhilU7vMBv4kWMoXIGc0TsOhx
-    consumer-secret: FvqoTlyKarH5SLBQGeEpKGcGRoePaf7G6NVU9veero3XKGF4mTRL9fw4VLGg6IK9
-    passkey: bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919
-    business-shortcode: 174379
-    stk-push-callback-url: https://f1bb635669d0.ngrok-free.app/api/payments/callback
-    stk-push-url: https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest
-    responseType: Completed
-    shortCode: 600997
-    confirmation-url: https://f1bb635669d0.ngrok-free.app/api/payments/confirmation
-    validation-url: https://f1bb635669d0.ngrok-free.app/api/payments/validation
-    register-url-endpoint: https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl
-    simulate-transaction-endpoint: https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate
-    b2c-initiator-password: Safaricom123!!
-    b2c-result-url: https://f1bb635669d0.ngrok-free.app/api/payments/b2c-transaction-result
-    b2c-queue-timeout-url: https://f1bb635669d0.ngrok-free.app/api/payments/b2c-queue-timeout
-    b2c-initiator-name: testapi
-    b2c-transaction-endpoint: https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
-    transactionResultUrl: https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query
-    checkAccountBalanceUrl: https://sandbox.safaricom.co.ke/mpesa/accountbalance/v1/query
-    security-credential: U95aaS2lDN2BvL2X7z17xWCTGty8yHgmMdU2NsQQ8mxZqE7CHJOr1NsX1xTD0PG+Hcm/Hl/jI4bF1+ro+wVh5EyimMOff6rMKL6ZSf7Ohg+lajkuJKzCXwIIrW//+ub+jWYY7N5/2Gv/OZLFYL1t3kTJCWh8o5mwHY7XuOqC5yGa2HE2syKtBI5l4QGIcs/nlgkRgsWSlgS/M4sk4U3XkLJqNZG95jShGUusO7N3BdAWXDuq0JQSzB+m8bf40D7U6HJNZvWmTKjH330b7481LNXqxGrzMqY7CwXZZTyvzab/mZZJZ+nNuRokUId9e3XrikgIUOsjgMIGqjveW61kUw==
+    consumer-key: ${MPESA_CONSUMER_KEY}
+    consumer-secret: ${MPESA_CONSUMER_SECRET}
+    passkey: ${MPESA_PASSKEY}
+    business-shortcode: ${MPESA_BUSINESS_SHORTCODE}
+    stk-push-callback-url: ${MPESA_STK_PUSH_CALLBACK_URL}
+    stk-push-url: ${MPESA_STK_PUSH_URL}
+    responseType: ${MPESA_RESPONSE_TYPE:Completed}   # default value
+    shortCode: ${MPESA_SHORT_CODE}
+    confirmation-url: ${MPESA_CONFIRMATION_URL}
+    validation-url: ${MPESA_VALIDATION_URL}
+    register-url-endpoint: ${MPESA_REGISTER_URL}
+    simulate-transaction-endpoint: ${MPESA_SIMULATE_URL}
+    b2c-initiator-password: ${MPESA_B2C_INITIATOR_PASSWORD}
+    b2c-result-url: ${MPESA_B2C_RESULT_URL}
+    b2c-queue-timeout-url: ${MPESA_B2C_QUEUE_TIMEOUT_URL}
+    b2c-initiator-name: ${MPESA_B2C_INITIATOR_NAME}
+    b2c-transaction-endpoint: ${MPESA_B2C_TRANSACTION_URL}
+    transactionResultUrl: ${MPESA_TRANSACTION_RESULT_URL}
+    checkAccountBalanceUrl: ${MPESA_CHECK_BALANCE_URL}
+    security-credential: ${MPESA_SECURITY_CREDENTIAL}

@@ -4,6 +4,7 @@ import com.dawnsynch.darajaapi.dtos.*;
 import com.dawnsynch.darajaapi.records.*;
 import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
 import com.dawnsynch.darajaapi.service.MpesaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class MpesaController {
 
 //    INITIATE STK PUSH
     @PostMapping("/stk-push")
-    public ResponseEntity<STKSyncResponse> stkPush(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<STKSyncResponse> stkPush(@Valid @RequestBody Map<String, String> payload) {
         try {
             return ResponseEntity.ok(mpesaService.initiateSTKPush(payload.get("phoneNumber"), payload.get("amount")));
         } catch (Exception e) {
@@ -70,14 +71,14 @@ public Map<String, String> handleCallback(@RequestBody STKCallback callback) {
 
 //    VALIDATION
     @PostMapping("/validation")
-    public ResponseEntity<AcknowledgeResponse> validateTransaction(@RequestBody TransactionResult transactionResult){
+    public ResponseEntity<AcknowledgeResponse> validateTransaction(@Valid @RequestBody TransactionResult transactionResult){
         return ResponseEntity.ok(acknowledgeResponse);
     }
 
 
 //    SIMULATE C2B TRANSACTION
     @PostMapping("/simulate-c2b")
-    public ResponseEntity<SimulateC2BResponse> simulateC2BTransaction(@RequestBody SimulateC2BRequest simulateC2BRequest) throws IOException {
+    public ResponseEntity<SimulateC2BResponse> simulateC2BTransaction(@Valid @RequestBody SimulateC2BRequest simulateC2BRequest) throws IOException {
         try {
             return ResponseEntity.ok(mpesaService.simulateC2BTransaction(simulateC2BRequest));
         } catch (Exception e) {
@@ -87,13 +88,13 @@ public Map<String, String> handleCallback(@RequestBody STKCallback callback) {
 
 //    SIMULATE B2C TRANSACTION
     @PostMapping("/b2c-transaction")
-    public ResponseEntity<CommonSyncResponse> performB2CTransaction(@RequestBody InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
+    public ResponseEntity<CommonSyncResponse> performB2CTransaction(@Valid @RequestBody InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
         return ResponseEntity.ok(mpesaService.performB2CTransaction(internalB2CTransactionRequest));
 
     }
 
     @PostMapping("/b2c-transaction-result")
-    public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@RequestBody TransactionAsyncResponse transactionAsyncResponse){
+    public ResponseEntity<AcknowledgeResponse> b2cTransactionAsyncResults(@Valid @RequestBody TransactionAsyncResponse transactionAsyncResponse){
         mpesaService.saveCallback(transactionAsyncResponse);
         return ResponseEntity.ok(acknowledgeResponse);
     }
@@ -105,13 +106,13 @@ public Map<String, String> handleCallback(@RequestBody STKCallback callback) {
 
 
     @PostMapping(path = "/simulate-transaction-result", produces = "application/json")
-    public ResponseEntity<CommonSyncResponse> getTransactionStatusResult(@RequestBody InternalTransactionStatusRequest internalTransactionStatusRequest) {
-        try {
-            return ResponseEntity.ok(mpesaService.getTransactionResult(internalTransactionStatusRequest));
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<CommonSyncResponse> getTransactionStatusResult(@Valid @RequestBody InternalTransactionStatusRequest internalTransactionStatusRequest){
+            try {
+                return ResponseEntity.ok(mpesaService.getTransactionResult(internalTransactionStatusRequest));
+            } catch (Exception e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
-    }
 
     @GetMapping("/check-account-balance")
     public ResponseEntity<CommonSyncResponse> checkAccountBalance() throws IOException {

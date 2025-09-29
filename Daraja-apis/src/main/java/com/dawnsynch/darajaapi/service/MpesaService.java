@@ -165,7 +165,7 @@ public class MpesaService {
 
         B2CTransactionRequest b2cTransactionRequest = new B2CTransactionRequest();
         b2cTransactionRequest.setCommandID(internalB2CTransactionRequest.getCommandID());
-        b2cTransactionRequest.setAmount(internalB2CTransactionRequest.getAmount());
+        b2cTransactionRequest.setAmount(String.valueOf(internalB2CTransactionRequest.getAmount()));
         b2cTransactionRequest.setPartyB(internalB2CTransactionRequest.getPartyB());
         b2cTransactionRequest.setRemarks(internalB2CTransactionRequest.getRemarks());
         b2cTransactionRequest.setOccassion(internalB2CTransactionRequest.getOccassion());
