@@ -37,7 +37,7 @@ public class MpesaController {
 
 //    INITIATE STK PUSH
     @PostMapping("/stk-push")
-    public ResponseEntity<STKSyncResponse> stkPush(@Valid @RequestBody Map<String, String> payload) {
+    public ResponseEntity<STKSyncResponse> stkPush(@RequestBody Map<String, String> payload) {
         try {
             return ResponseEntity.ok(mpesaService.initiateSTKPush(payload.get("phoneNumber"), payload.get("amount")));
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class MpesaController {
 
 //    STK CALLBACK
 @PostMapping("/callback")
-public Map<String, String> handleCallback(@RequestBody STKCallback callback) {
+public Map<String, String> handleCallback(@Valid @RequestBody STKCallback callback) {
     mpesaService.processStkCallback(callback);
 
     return Map.of(

@@ -35,3 +35,42 @@ mpesa:
     transactionResultUrl: ${MPESA_TRANSACTION_RESULT_URL}
     checkAccountBalanceUrl: ${MPESA_CHECK_BALANCE_URL}
     security-credential: ${MPESA_SECURITY_CREDENTIAL}
+
+
+
+resilience4j:
+  retry:
+    instances:
+      daraja:
+        max-attempts: 3
+        wait-duration: 2s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 1.5
+
+  circuitbreaker:
+    instances:
+      daraja:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+
+  timelimiter:
+    instances:
+      daraja:
+        timeout-duration: 5s
+
+
+
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+

@@ -9,6 +9,8 @@ import com.dawnsynch.darajaapi.repository.B2C_C2B_CallbackRepository;
 import com.dawnsynch.darajaapi.repository.STKPushLogRepository;
 import com.dawnsynch.darajaapi.utils.Helper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +37,8 @@ public class MpesaService {
 
 
     //    THIS METHOD GENERATES ACCESS TOKEN TO BE USED FOR AUTHORIZATION BY OTHER DARAJA APIS
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public AccessTokenResponse generateAccessToken() throws IOException {
         String credentials = Credentials.basic(properties.consumerKey(), properties.consumerSecret());
 
@@ -57,6 +61,8 @@ public class MpesaService {
 
 //    INITIATES THE STK PUSH
 
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public STKSyncResponse initiateSTKPush(String phoneNumber, String amount) throws IOException {
         phoneNumber = phoneNumber.startsWith("0") ? phoneNumber.replaceFirst("0", "254") : phoneNumber;
 
@@ -104,6 +110,8 @@ public class MpesaService {
 
 //    REGISTER URL FOR C2B TRANSACTION
 
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public RegisterUrlResponse registerUrl() throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
@@ -134,7 +142,9 @@ public class MpesaService {
     }
 
 //    SIMULATE C2B TRANSACTION
-    public SimulateC2BResponse simulateC2BTransaction(SimulateC2BRequest simulateC2BRequest) throws IOException {
+@CircuitBreaker(name="daraja")
+@Retry(name="daraja")
+public SimulateC2BResponse simulateC2BTransaction(SimulateC2BRequest simulateC2BRequest) throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), objectMapper.writeValueAsString(simulateC2BRequest));
@@ -159,6 +169,8 @@ public class MpesaService {
 
 //      SIMULATE B2C TRANSACTION
 
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public CommonSyncResponse performB2CTransaction (@NotNull InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
 
         AccessTokenResponse accessTokenResponse = generateAccessToken();
@@ -201,6 +213,8 @@ public class MpesaService {
 
 //    QUERY TRANSACTION
 
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public CommonSyncResponse getTransactionResult(InternalTransactionStatusRequest internalTransactionStatusRequest) throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
@@ -238,6 +252,8 @@ public class MpesaService {
 
 //    CHECK ACCOUNT BALANCE
 
+    @CircuitBreaker(name="daraja")
+    @Retry(name="daraja")
     public CommonSyncResponse checkAccountBalance() throws IOException {
         AccessTokenResponse accessTokenResponse = generateAccessToken();
 
